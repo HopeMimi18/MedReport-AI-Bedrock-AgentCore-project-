@@ -1,0 +1,35 @@
+# Python virtual environments
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables / secrets
+.env
+.env.*
+
+# AWS Bedrock AgentCore local configuration
+.bedrock_agentcore.yaml
+
+# Generated files
+medical_reports.txt
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Windows
+Thumbs.db
+
+# macOS
+.DS_Store
+
+# Python builds
+build/
+dist/
+*.egg-info/
