@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from strands import Agent, tool
 from strands.models import BedrockModel
+import boto3
 
 try:
     from bedrock_agentcore.runtime import BedrockAgentCoreApp
@@ -14,6 +15,15 @@ AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-pro-v1:0")
 
 app = BedrockAgentCoreApp()
+
+REPORTS_BUCKET = os.getenv("REPORTS_BUCKET")
+
+s3 = boto3.client(
+    "s3",
+    region_name=AWS_REGION
+)
+
+
 
 SYSTEM_PROMPT = f"""
 You are {AGENT_NAME}, a professional healthcare incident reporting assistant.
@@ -37,7 +47,7 @@ Rules:
 - If details are missing, clearly say "Not specified"
 - Always include a short disclaimer that the report is AI-generated and should be reviewed by a healthcare professional if needed
 - Always use the format_medical_report tool to create the final report
-- If the user asks to save or log the report, use the save_report_to_file tool
+- If the user asks to save or log the report, use the save_report_to_s3 tool
 
 Report format:
 Incident Report
@@ -76,6 +86,26 @@ def format_medical_report(
 Disclaimer: This AI-generated report is for documentation support only and should be reviewed by a qualified healthcare professional if necessary.
 """
 
+@tool
+def save_report_to_s3(report_text: str) -> str:
+    """
+    Saves a generated medical incident report to Amazon S3.
+    """
+
+    if not REPORTS_BUCKET:
+        return "REPORTS_BUCKET environment variable is not configured."
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_name = f"reports/medical_report_{timestamp}.txt"
+
+    s3.put_object(
+        Bucket=REPORTS_BUCKET,
+        Key=file_name,
+        Body=report_text.encode("utf-8"),
+        ContentType="text/plain"
+    )
+
+    return f"Report saved successfully to s3://{REPORTS_BUCKET}/{file_name}"
 
 @tool
 def save_report_to_file(report_text: str, filename: str = "medical_reports.txt") -> str:
@@ -119,7 +149,7 @@ def get_agent():
         _agent = Agent(
             model=model,
             system_prompt=SYSTEM_PROMPT,
-            tools=[format_medical_report, save_report_to_file]
+            tools=[format_medical_report,save_report_to_s3]
         )
 
     return _agent
