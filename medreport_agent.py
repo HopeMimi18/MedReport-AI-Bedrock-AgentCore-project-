@@ -1,3 +1,5 @@
+from uuid import uuid4
+from botocore.exceptions import BotoCoreError, ClientError
 import os
 from datetime import datetime
 from strands import Agent, tool
@@ -96,16 +98,40 @@ def save_report_to_s3(report_text: str) -> str:
         return "REPORTS_BUCKET environment variable is not configured."
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    file_name = f"reports/medical_report_{timestamp}.txt"
+    report_id = uuid4().hex[:8]
 
-    s3.put_object(
-        Bucket=REPORTS_BUCKET,
-        Key=file_name,
-        Body=report_text.encode("utf-8"),
-        ContentType="text/plain"
+    file_name = (
+        f"reports/medical_report_{timestamp}_{report_id}.txt"
     )
 
-    return f"Report saved successfully to s3://{REPORTS_BUCKET}/{file_name}"
+    try:
+        s3.put_object(
+            Bucket=REPORTS_BUCKET,
+            Key=file_name,
+            Body=report_text.encode("utf-8"),
+            ContentType="text/plain"
+        )
+
+        return (
+            f"Report saved successfully to "
+            f"s3://{REPORTS_BUCKET}/{file_name}"
+        )
+
+    except ClientError as error:
+        error_code = error.response.get(
+            "Error", {}
+        ).get("Code", "Unknown")
+
+        return (
+            f"Unable to save report to Amazon S3. "
+            f"AWS error: {error_code}"
+        )
+
+    except BotoCoreError:
+        return (
+            "Unable to save report to Amazon S3 "
+            "because of an AWS connection or configuration error."
+        )
 
 @tool
 def save_report_to_file(report_text: str, filename: str = "medical_reports.txt") -> str:
