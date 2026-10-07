@@ -5,6 +5,7 @@ from datetime import datetime
 from strands import Agent, tool
 from strands.models import BedrockModel
 import boto3
+import logging
 
 try:
     from bedrock_agentcore.runtime import BedrockAgentCoreApp
@@ -15,11 +16,16 @@ except ImportError:
 AGENT_NAME = "MedReport AI"
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "us.amazon.nova-pro-v1:0")
-
-app = BedrockAgentCoreApp()
-
 REPORTS_BUCKET = os.getenv("REPORTS_BUCKET")
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO").upper(),
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+
+logger = logging.getLogger(__name__)
+
+app = BedrockAgentCoreApp()
 s3 = boto3.client(
     "s3",
     region_name=AWS_REGION
@@ -95,6 +101,10 @@ def save_report_to_s3(report_text: str) -> str:
     """
 
     if not REPORTS_BUCKET:
+        logger.warning(
+        "Report save skipped because REPORTS_BUCKET is not configured"
+    )
+
         return "REPORTS_BUCKET environment variable is not configured."
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -112,6 +122,12 @@ def save_report_to_s3(report_text: str) -> str:
             ContentType="text/plain"
         )
 
+        logger.info(
+            "Medical report saved to S3 bucket=%s key=%s",
+            REPORTS_BUCKET,
+            file_name
+       )
+
         return (
             f"Report saved successfully to "
             f"s3://{REPORTS_BUCKET}/{file_name}"
@@ -122,16 +138,25 @@ def save_report_to_s3(report_text: str) -> str:
             "Error", {}
         ).get("Code", "Unknown")
 
+        logger.error(
+        "Amazon S3 upload failed with AWS error code=%s",
+        error_code
+        )
+
         return (
             f"Unable to save report to Amazon S3. "
             f"AWS error: {error_code}"
         )
 
     except BotoCoreError:
+        logger.exception(
+            "Amazon S3 connection or configuration error"
+        )
+
         return (
             "Unable to save report to Amazon S3 "
             "because of an AWS connection or configuration error."
-        )
+    )
 
 @tool
 def save_report_to_file(report_text: str, filename: str = "medical_reports.txt") -> str:
@@ -165,6 +190,13 @@ def get_agent():
     global _agent
 
     if _agent is None:
+
+        logger.info(
+            "Initializing MedReport AI model=%s region=%s",
+            MODEL_ID,
+            AWS_REGION
+        )
+        
         model = BedrockModel(
             model_id=MODEL_ID,
             region_name=AWS_REGION,
@@ -191,6 +223,14 @@ def invoke(payload):
         "prompt": "Patient slipped near the stairs..."
     }
     """
+    logger.info("MedReport AI invocation received")
+    if not user_message:
+        logger.warning("Invocation rejected because prompt was empty")
+
+        return {
+            "result": "Please provide incident notes so I can format the medical incident report."
+        }
+
     user_message = payload.get("prompt", "").strip()
 
     if not user_message:
@@ -199,6 +239,7 @@ def invoke(payload):
         }
 
     response = get_agent()(user_message)
+    logger.info("MedReport AI invocation completed successfully")
 
     return {
         "result": str(response)
