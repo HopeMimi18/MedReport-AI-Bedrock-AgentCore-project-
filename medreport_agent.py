@@ -260,7 +260,12 @@ def invoke(payload):
         "result": str(response)
     }
 
-    
+def health_check():
+    return {
+        "status": "healthy",
+        "service": AGENT_NAME,
+        "region": AWS_REGION
+    }   
 
 
 if __name__ == "__main__":
