@@ -119,7 +119,11 @@ def save_report_to_s3(report_text: str) -> str:
             Bucket=REPORTS_BUCKET,
             Key=file_name,
             Body=report_text.encode("utf-8"),
-            ContentType="text/plain"
+            ContentType="text/plain",
+            Metadata={
+                "report-id": report_id,
+                "generated-by": "medreport-ai"
+            }
         )
 
         logger.info(
