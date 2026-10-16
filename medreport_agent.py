@@ -218,16 +218,14 @@ def get_agent():
 
 @app.entrypoint
 def invoke(payload):
-    """
-    AgentCore calls this function.
-
-    Expected input:
-    {
-        "prompt": "Patient slipped near the stairs..."
-    }
-    """
-
     logger.info("MedReport AI invocation received")
+
+    if not isinstance(payload, dict):
+        logger.warning("Invalid payload type received")
+
+        return {
+            "result": "Invalid request format."
+        }
 
     user_message = payload.get("prompt", "").strip()
 
@@ -244,13 +242,6 @@ def invoke(payload):
         }
 
     response = get_agent()(user_message)
-
-    if not isinstance(payload, dict):
-        logger.warning("Invalid payload type received")
-
-        return {
-            "result": "Invalid request format."
-        }
 
     logger.info(
         "MedReport AI invocation completed successfully"
