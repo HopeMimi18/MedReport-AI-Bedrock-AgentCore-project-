@@ -212,7 +212,6 @@ def get_agent():
 
     return _agent
 
-
 @app.entrypoint
 def invoke(payload):
     """
@@ -223,23 +222,28 @@ def invoke(payload):
         "prompt": "Patient slipped near the stairs..."
     }
     """
-    logger.info("MedReport AI invocation received")
-    if not user_message:
-        logger.warning("Invocation rejected because prompt was empty")
 
-        return {
-            "result": "Please provide incident notes so I can format the medical incident report."
-        }
+    logger.info("MedReport AI invocation received")
 
     user_message = payload.get("prompt", "").strip()
 
     if not user_message:
+        logger.warning(
+            "Invocation rejected because prompt was empty"
+        )
+
         return {
-            "result": "Please provide incident notes so I can format the medical incident report."
+            "result": (
+                "Please provide incident notes so I can "
+                "format the medical incident report."
+            )
         }
 
     response = get_agent()(user_message)
-    logger.info("MedReport AI invocation completed successfully")
+
+    logger.info(
+        "MedReport AI invocation completed successfully"
+    )
 
     return {
         "result": str(response)
