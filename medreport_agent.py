@@ -241,6 +241,13 @@ def invoke(payload):
 
     response = get_agent()(user_message)
 
+    if not isinstance(payload, dict):
+        logger.warning("Invalid payload type received")
+
+        return {
+            "result": "Invalid request format."
+        }
+
     logger.info(
         "MedReport AI invocation completed successfully"
     )
@@ -248,6 +255,8 @@ def invoke(payload):
     return {
         "result": str(response)
     }
+
+    
 
 
 if __name__ == "__main__":
