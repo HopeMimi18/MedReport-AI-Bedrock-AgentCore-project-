@@ -5,6 +5,9 @@ MedReport AI is an AI-powered medical incident reporting assistant built with AW
 The application converts unstructured incident notes into clear, structured incident reports using **Amazon Bedrock**, **Amazon Nova Pro**, **Strands Agents**, **Amazon Bedrock AgentCore**, and **Amazon S3**.
 
 ---
+## Watch the Demo
+
+https://www.youtube.com/watch?v=HG7afYJXQ-Q
 
 ## WeThinkCode_ Verification
 
