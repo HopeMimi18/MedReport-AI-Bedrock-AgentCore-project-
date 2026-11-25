@@ -1,3 +1,28 @@
+# MedReport AI | Cloud-native incident reporting
+
+**Applied AI · AWS Bedrock AgentCore · Responsible AI**
+
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-Bedrock%20AgentCore-232F3E) ![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+
+[▶ Watch the project demo](https://www.youtube.com/watch?v=HG7afYJXQ-Q)
+
+## Engineering overview
+
+MedReport AI transforms unstructured medical incident notes into structured reports using Amazon Nova Pro and custom Strands agent tools. It is an educational prototype, not a diagnostic system.
+
+| Engineering area | Implementation |
+| --- | --- |
+| Agent runtime | Amazon Bedrock AgentCore |
+| Model | Amazon Nova Pro |
+| Tool integration | Report formatting and S3 persistence |
+| Reliability | Controlled AWS errors, unique report IDs, lazy initialisation |
+| Responsible AI | Missing-information handling, no diagnosis, human review |
+| Deployment | Container configuration for AgentCore |
+
+**Next steps:** dedicated agent evaluations, tracing, release quality gates and operational monitoring. These are proposed improvements, not implemented features.
+
+## Technical documentation
+
 # MedReport AI — Amazon Bedrock AgentCore
 
 MedReport AI is an AI-powered medical incident reporting assistant built with AWS generative AI and cloud services.
